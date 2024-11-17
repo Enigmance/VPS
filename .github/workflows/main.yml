@@ -46,6 +46,6 @@ jobs:
     - name: Show Public IP
       run: type public_ip.txt
     - name: Keep Session Alive
-      shell: cmd
-      run: timeout /t 86400
+      shell: bash
+      run: while true; do sleep 60; done
 
