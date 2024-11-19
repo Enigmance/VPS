@@ -1,102 +1,29 @@
-# name: CI
-
-# on: [push, workflow_dispatch]
-
-# jobs:
-#   build:
-
-#     runs-on: windows-latest
-#     timeout-minutes: 9999
-
-#     steps:
-#     - name: Download
-#       run: Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
-#     - name: Extract
-#       run: Expand-Archive ngrok.zip
-#     - name: Auth
-#       run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
-#       env:
-#         NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
-#     - name: Enable TS
-#       run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
-#     - run: Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-#     - run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
-#     - run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
-#     - name: Create Tunnel
-#       run: .\ngrok\ngrok.exe tcp --region=eu 3389 --log=stdout
-      
-name: Persistent RDP Access
+name: CI
 
 on: [push, workflow_dispatch]
 
 jobs:
   build:
+
     runs-on: windows-latest
     timeout-minutes: 9999
 
     steps:
-    - name: Download LocalXpose
-      run: Invoke-WebRequest https://localxpose.io/download/win/ -OutFile localxpose.zip
-
-    - name: Extract LocalXpose
-      run: Expand-Archive localxpose.zip
-
-    - name: Authenticate LocalXpose
-      run: .\localxpose.exe authtoken $Env:LOCALXPOSE_AUTH_TOKEN
+    - name: Download
+      run: Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
+    - name: Extract
+      run: Expand-Archive ngrok.zip
+    - name: Auth
+      run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
       env:
-        LOCALXPOSE_AUTH_TOKEN: ${{ secrets.LOCALXPOSE_AUTH_TOKEN }}
-
-    - name: Enable RDP
-      run: |
-        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
-        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-        Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
-
-    - name: Start LocalXpose Tunnel
-      id: start_localxpose
-      run: |
-        # Start LocalXpose tunnel for RDP (port 3389)
-        .\localxpose.exe tcp 3389 --region=eu > localxpose_log.txt &
-        Start-Sleep -Seconds 10  # Wait for LocalXpose to establish the tunnel
-
-        # Debugging: Check if localxpose_log.txt contains the expected output
-        Write-Output "localxpose_log.txt content:"
-        Get-Content localxpose_log.txt
-        # Extract the address from the log
-        $localXposeAddress = Select-String "tcp://" localxpose_log.txt | ForEach-Object { $_.Matches.Groups[0].Value }
-        Write-Output "localXposeAddress: $localXposeAddress"
-        # Write the LocalXpose address to a file
-        Write-Output $localXposeAddress | Out-File localxpose_address.txt
-
-    - name: Update Cloudflare DNS
-      run: |
-        # Debug: Check if localxpose_address.txt exists and contains data
-        if (Test-Path localxpose_address.txt) {
-          Write-Output "localxpose_address.txt exists."
-          $localXposeAddress = Get-Content localxpose_address.txt
-          Write-Output "localXposeAddress from file: $localXposeAddress"
-          
-          if ($localXposeAddress) {
-            $tcpHost = $localXposeAddress.Split('//')[1].Split(':')[0]
-            $tcpPort = $localXposeAddress.Split(':')[1]
-            $dnsValue = "${tcpHost}:${tcpPort}"
-            Invoke-RestMethod `
-              -Uri "https://api.cloudflare.com/client/v4/zones/$Env:CLOUDFLARE_ZONE_ID/dns_records/$Env:CLOUDFLARE_DNS_RECORD_ID" `
-              -Method PATCH `
-              -Headers @{
-                  "Authorization" = "Bearer $Env:CLOUDFLARE_API_TOKEN"
-                  "Content-Type" = "application/json"
-              } `
-              -Body (@{ content = $dnsValue } | ConvertTo-Json)
-          } else {
-            Write-Error "localxpose_address.txt is empty or invalid."
-          }
-        } else {
-          Write-Error "localxpose_address.txt file does not exist."
-        }
-      env:
-        CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-        CLOUDFLARE_DNS_RECORD_ID: ${{ secrets.CLOUDFLARE_DNS_RECORD_ID }}
-        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+    - name: Enable TS
+      run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
+    - run: Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+    - run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+    - run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
+    - name: Create Tunnel
+      run: .\ngrok\ngrok.exe tcp --region=eu 3389 --log=stdout
+      
 
 
