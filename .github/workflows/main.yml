@@ -1,4 +1,3 @@
-
 name: Windows-RDP
 
 on: workflow_dispatch
@@ -28,27 +27,6 @@ jobs:
       run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
       env:
         NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
-    - name: Install Python 3.10
-      run: |
-        # Download the Python 3.10 installer
-        Invoke-WebRequest https://www.python.org/ftp/python/3.10.10/python-3.10.10-amd64.exe -OutFile python-installer.exe
-        # Install Python silently
-        Start-Process -FilePath python-installer.exe -ArgumentList '/quiet', 'InstallAllUsers=1', 'PrependPath=1' -Wait
-        # Add Python to the PATH environment variable manually if needed
-        [System.Environment]::SetEnvironmentVariable('PATH', $env:PATH + ';C:\Program Files\Python310;C:\Program Files\Python310\Scripts', [System.EnvironmentVariableTarget]::Machine)
-        # Verify installation
-        python --version
-
-    - name: Install Visual Studio Community 2022
-      run: |
-        # Download Visual Studio Installer
-        Invoke-WebRequest https://aka.ms/vs/17/release/vs_installer.exe -OutFile vs_installer.exe
-        # Install Visual Studio with required workloads (you can modify this list as needed)
-        Start-Process -FilePath vs_installer.exe -ArgumentList '--quiet', '--wait', '--add', 'Microsoft.VisualStudio.Workload.NativeDesktop', '--add', 'Microsoft.VisualStudio.Workload.Python', '--add', 'Microsoft.VisualStudio.Workload.NetCoreTools' -Wait
-        # Confirm installation
-        & "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" /? | Out-File visual_studio_version.txt
-        Get-Content visual_studio_version.txt
-        
     - name: Creating RDP.
       run: | 
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
@@ -60,7 +38,7 @@ jobs:
         copy "Visual Studio 2019.lnk" "C:\Users\Public\Desktop\Visual Studio 2019.lnk"
         copy "Ganti Password.exe" "C:\Users\Public\Desktop\Ganti Password.exe"
     - name: Making tunnels
-      run: Start-Process Powershell -ArgumentList '-Noexit -Command ".\ngrok\ngrok.exe tcp --region=eu 3389"'
+      run: Start-Process Powershell -ArgumentList '-Noexit -Command ".\ngrok\ngrok.exe tcp --region ap 3389"'
     - name: Connect RDP CPU 2 Core - 7GB Ram - 256 SSD.
       run: cmd /c start.bat
     - name: Successful implementation! You can close the tab now.
