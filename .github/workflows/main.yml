@@ -53,16 +53,18 @@ jobs:
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
 
     - name: Start ngrok Tunnel
-      id: start_ngrok  # Correctly placed the id for this step
+      id: start_ngrok
       run: |
+        # Start ngrok in the background and log the output
         .\ngrok\ngrok.exe tcp 3389 > ngrok_log.txt &
-        Start-Sleep -Seconds 5
-        # Check ngrok_log.txt for output
+        Start-Sleep -Seconds 10  # Increased wait time to ensure ngrok has time to establish the tunnel
+        # Debugging: Check if ngrok_log.txt contains the expected output
         Write-Output "ngrok_log.txt content:"
         Get-Content ngrok_log.txt
         # Extract the address from the log
         $ngrokAddress = Select-String "tcp://" ngrok_log.txt | ForEach-Object { $_.Matches.Groups[0].Value }
         Write-Output "ngrokAddress: $ngrokAddress"
+        # Write the ngrok address to a file
         Write-Output $ngrokAddress | Out-File ngrok_address.txt
 
     - name: Update Cloudflare DNS
