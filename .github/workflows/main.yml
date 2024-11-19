@@ -15,7 +15,6 @@ jobs:
         Invoke-WebRequest https://raw.githubusercontent.com/vngithubdev/rdp-resources/main/wallpaper.png -OutFile wallpaper.png
         Invoke-WebRequest https://raw.githubusercontent.com/vngithubdev/rdp-resources/main/wallpaper.bat -OutFile wallpaper.bat
         Invoke-WebRequest https://raw.githubusercontent.com/vngithubdev/rdp-resources/main/loop.bat -OutFile loop.bat
-
     - name: Install Python 3.10
       run: |
         # Download the Python 3.10 installer
