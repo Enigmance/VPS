@@ -1,37 +1,9 @@
-# name: CI
-
-# on: [push, workflow_dispatch]
-
-# jobs:
-#   build:
-
-#     runs-on: windows-latest
-#     timeout-minutes: 9999
-
-#     steps:
-#     - name: Download
-#       run: Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
-#     - name: Extract
-#       run: Expand-Archive ngrok.zip
-#     - name: Auth
-#       run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
-#       env:
-#         NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
-#     - name: Enable TS
-#       run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
-#     - run: Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-#     - run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
-#     - run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
-#     - name: Create Tunnel
-#       run: .\ngrok\ngrok.exe tcp --region=eu 3389 --log=stdout
-      
 name: Windows-RDP
 
 on: workflow_dispatch
 
 jobs:
   build:
-
     runs-on: windows-latest
     timeout-minutes: 9999
 
@@ -43,17 +15,42 @@ jobs:
         Invoke-WebRequest https://raw.githubusercontent.com/vngithubdev/rdp-resources/main/wallpaper.png -OutFile wallpaper.png
         Invoke-WebRequest https://raw.githubusercontent.com/vngithubdev/rdp-resources/main/wallpaper.bat -OutFile wallpaper.bat
         Invoke-WebRequest https://raw.githubusercontent.com/vngithubdev/rdp-resources/main/loop.bat -OutFile loop.bat
+
+    - name: Install Python 3.10
+      run: |
+        # Download the Python 3.10 installer
+        Invoke-WebRequest https://www.python.org/ftp/python/3.10.10/python-3.10.10-amd64.exe -OutFile python-installer.exe
+        # Install Python silently
+        Start-Process -FilePath python-installer.exe -ArgumentList '/quiet', 'InstallAllUsers=1', 'PrependPath=1' -Wait
+        # Add Python to the PATH environment variable manually if needed
+        [System.Environment]::SetEnvironmentVariable('PATH', $env:PATH + ';C:\Program Files\Python310;C:\Program Files\Python310\Scripts', [System.EnvironmentVariableTarget]::Machine)
+        # Verify installation
+        python --version
+
+    - name: Install Visual Studio Community 2022
+      run: |
+        # Download Visual Studio Installer
+        Invoke-WebRequest https://aka.ms/vs/17/release/vs_installer.exe -OutFile vs_installer.exe
+        # Install Visual Studio with required workloads (you can modify this list as needed)
+        Start-Process -FilePath vs_installer.exe -ArgumentList '--quiet', '--wait', '--add', 'Microsoft.VisualStudio.Workload.NativeDesktop', '--add', 'Microsoft.VisualStudio.Workload.Python', '--add', 'Microsoft.VisualStudio.Workload.NetCoreTools' -Wait
+        # Confirm installation
+        & "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" /? | Out-File visual_studio_version.txt
+        Get-Content visual_studio_version.txt
+
     - name: Load Launcher.
       run: |
         Invoke-WebRequest https://raw.githubusercontent.com/vngithubdev/rdp-resources/main/launcher/Node.js.lnk -OutFile Node.js.lnk
         Invoke-WebRequest https://raw.githubusercontent.com/vngithubdev/rdp-resources/main/launcher/Visual%20Studio%202019.lnk -OutFile "Visual Studio 2019.lnk"
         Invoke-WebRequest https://github.com/vngithubdev/rdp-resources/raw/main/launcher/Ganti%20Password.exe -OutFile "Ganti Password.exe"
+
     - name: Extracting ngrok.
       run: Expand-Archive ngrok.zip
+
     - name: Connect ngrok.
       run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
       env:
         NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+
     - name: Creating RDP.
       run: | 
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
@@ -64,10 +61,59 @@ jobs:
         copy Node.js.lnk C:\Users\Public\Desktop\Node.js.lnk
         copy "Visual Studio 2019.lnk" "C:\Users\Public\Desktop\Visual Studio 2019.lnk"
         copy "Ganti Password.exe" "C:\Users\Public\Desktop\Ganti Password.exe"
+
     - name: Making tunnels
       run: Start-Process Powershell -ArgumentList '-Noexit -Command ".\ngrok\ngrok.exe tcp --region=eu 3389"'
+
     - name: Connect RDP CPU 2 Core - 7GB Ram - 256 SSD.
       run: cmd /c start.bat
+
     - name: Successful implementation! You can close the tab now.
       run: cmd /c loop.bat
 
+
+# name: Windows-RDP
+
+# on: workflow_dispatch
+
+# jobs:
+#   build:
+
+#     runs-on: windows-latest
+#     timeout-minutes: 9999
+
+#     steps:
+#     - name: Downloading ngrok.
+#       run: |
+#         Invoke-WebRequest https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
+#         Invoke-WebRequest https://raw.githubusercontent.com/vngithubdev/rdp-resources/main/start.bat -OutFile start.bat
+#         Invoke-WebRequest https://raw.githubusercontent.com/vngithubdev/rdp-resources/main/wallpaper.png -OutFile wallpaper.png
+#         Invoke-WebRequest https://raw.githubusercontent.com/vngithubdev/rdp-resources/main/wallpaper.bat -OutFile wallpaper.bat
+#         Invoke-WebRequest https://raw.githubusercontent.com/vngithubdev/rdp-resources/main/loop.bat -OutFile loop.bat
+#     - name: Load Launcher.
+#       run: |
+#         Invoke-WebRequest https://raw.githubusercontent.com/vngithubdev/rdp-resources/main/launcher/Node.js.lnk -OutFile Node.js.lnk
+#         Invoke-WebRequest https://raw.githubusercontent.com/vngithubdev/rdp-resources/main/launcher/Visual%20Studio%202019.lnk -OutFile "Visual Studio 2019.lnk"
+#         Invoke-WebRequest https://github.com/vngithubdev/rdp-resources/raw/main/launcher/Ganti%20Password.exe -OutFile "Ganti Password.exe"
+#     - name: Extracting ngrok.
+#       run: Expand-Archive ngrok.zip
+#     - name: Connect ngrok.
+#       run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
+#       env:
+#         NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+#     - name: Creating RDP.
+#       run: | 
+#         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
+#         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+#         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+#         copy wallpaper.png D:\a\wallpaper.png
+#         copy wallpaper.bat D:\a\wallpaper.bat
+#         copy Node.js.lnk C:\Users\Public\Desktop\Node.js.lnk
+#         copy "Visual Studio 2019.lnk" "C:\Users\Public\Desktop\Visual Studio 2019.lnk"
+#         copy "Ganti Password.exe" "C:\Users\Public\Desktop\Ganti Password.exe"
+#     - name: Making tunnels
+#       run: Start-Process Powershell -ArgumentList '-Noexit -Command ".\ngrok\ngrok.exe tcp --region=eu 3389"'
+#     - name: Connect RDP CPU 2 Core - 7GB Ram - 256 SSD.
+#       run: cmd /c start.bat
+#     - name: Successful implementation! You can close the tab now.
+#       run: cmd /c loop.bat
