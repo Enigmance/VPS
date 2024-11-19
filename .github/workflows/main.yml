@@ -37,21 +37,16 @@ jobs:
     # Install Python 3.10
     - name: Install Python 3.10
       run: |
-        Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe" -OutFile python-installer.exe
+        Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe" -OutFile python-installer.exe
         Start-Process -Wait -FilePath python-installer.exe -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0"
+
+     # Add Python to PATH manually
+    - name: Add Python to Environment Variables
+      run: |
+        $pythonPath = [System.Environment]::GetEnvironmentVariable("ProgramFiles") + "\Python310"
+        [System.Environment]::SetEnvironmentVariable("Path", $env:Path + ";$pythonPath", [System.EnvironmentVariableTarget]::Machine)
 
     # Verify Python installation
     - name: Verify Python Installation
       run: python --version
 
-    # Install Visual Studio Code
-    - name: Install Visual Studio Code
-      run: |
-        Invoke-WebRequest -Uri "https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user" -OutFile vscode-installer.exe
-        Start-Process -Wait -FilePath vscode-installer.exe -ArgumentList "/silent /mergetasks=!runcode"
-
-    # Install C++ Tools Extension in VSC
-    - name: Install C++ Tools Extension
-      run: |
-        "code" --install-extension ms-vscode.cpptools
-        "code" --install-extension ms-vscode.cpptools-themes
