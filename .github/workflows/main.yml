@@ -60,7 +60,7 @@ jobs:
         $ngrokAddress = Get-Content ngrok_address.txt
         $tcpHost = $ngrokAddress.Split('//')[1].Split(':')[0]
         $tcpPort = $ngrokAddress.Split(':')[1]
-        $dnsValue = "$tcpHost:$tcpPort"
+        $dnsValue = "${tcpHost}:${tcpPort}"  # Wrap in ${} to avoid parser error
         Invoke-RestMethod `
           -Uri "https://api.cloudflare.com/client/v4/zones/$Env:CLOUDFLARE_ZONE_ID/dns_records/$Env:CLOUDFLARE_DNS_RECORD_ID" `
           -Method PATCH `
