@@ -50,3 +50,6 @@ jobs:
     - name: Verify Python Installation
       run: python --version
 
+    - name: Start Persistent ngrok Tunnel
+      run: .\ngrok\ngrok.exe tcp --region=eu 3389 --log=stdout
+
